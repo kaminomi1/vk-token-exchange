@@ -1,0 +1,13 @@
+{
+  "name": "vk-token-exchange",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "vercel build"
+  },
+  "dependencies": {
+    "vercel": "^31.0.0"
+  }
+}

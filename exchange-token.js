@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // Только GET запросы
   if (req.method !== 'GET') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
@@ -13,17 +12,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Замени на реальные значения:
     const clientId = process.env.VK_CLIENT_ID;
     const clientSecret = process.env.VK_CLIENT_SECRET;
     const redirectUri = 'https://oauth.vk.com/blank.html';
 
     if (!clientId || !clientSecret) {
-      res.status(500).json({ error: 'Server misconfigured: missing VK_CLIENT_ID or VK_CLIENT_SECRET' });
+      res.status(500).json({ error: 'Server misconfigured' });
       return;
     }
 
-    // Обмениваем code на token
     const tokenResponse = await fetch('https://oauth.vk.com/access_token', {
       method: 'POST',
       headers: {
@@ -40,10 +37,8 @@ export default async function handler(req, res) {
     const data = await tokenResponse.json();
 
     if (data.access_token) {
-      // Возвращаем токен
       res.status(200).json({ access_token: data.access_token, user_id: data.user_id });
     } else {
-      // Ошибка от VK
       res.status(400).json({ error: 'VK Error', details: data });
     }
   } catch (err) {

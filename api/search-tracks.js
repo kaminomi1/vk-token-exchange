@@ -1,10 +1,5 @@
 // api/search-tracks.js
 
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
-
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     res.status(405).json({ error: 'Method not allowed' });
@@ -19,27 +14,23 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Пример команды yt-dlp для поиска (без скачивания)
-    // Возвращает JSON с результатами
-    // Убедись, что yt-dlp установлен как зависимость или доступен на Vercel
-    const command = `yt-dlp "ytsearch5:${q}" --dump-json`;
+    // Используем публичный инстанс invidious
+    const invidiousUrl = `https://invidious.fdn.fr/api/v1/search?q=${encodeURIComponent(q)}&type=video&maxResults=10`;
 
-    const { stdout } = await execAsync(command);
+    const response = await fetch(invidiousUrl);
+    const data = await response.json();
 
-    const tracks = stdout
-      .split('\n')
-      .filter(line => line.trim() !== '')
-      .map(line => {
-        const item = JSON.parse(line);
-        return {
-          id: item.id,
-          title: item.title,
-          artist: item.channel || 'Неизвестный исполнитель', // yt-dlp может не всегда давать artist
-          duration: item.duration || 0,
-          url: item.url, // Это будет временная ссылка на аудио
-          thumbnailUrl: item.thumbnail || null
-        };
-      });
+    // Фильтруем и форматируем треки
+    const tracks = data
+      .filter(item => item.type === 'video' && item.duration > 0)
+      .map(item => ({
+        id: item.videoId,
+        title: item.title,
+        artist: item.author || 'Неизвестный исполнитель',
+        duration: item.duration,
+        url: `https://www.youtube.com/watch?v=${item.videoId}`, // Это пока YouTube URL
+        thumbnailUrl: item.videoThumbnails?.[0]?.url || null
+      }));
 
     res.status(200).json({ tracks });
 
